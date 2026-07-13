@@ -3,7 +3,7 @@ export default function ProgressBar({ current, total }) {
   return (
     <div
       className="w-full h-3 rounded-full overflow-hidden"
-      style={{ background: 'var(--or100)' }}
+      style={{ background: 'var(--track)' }}
       role="progressbar"
       aria-valuenow={current}
       aria-valuemin={0}

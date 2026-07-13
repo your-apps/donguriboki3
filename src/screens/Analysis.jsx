@@ -52,7 +52,7 @@ export default function Analysis({ onStartLesson }) {
                         {acc === null ? '未挑戦' : `${acc}%`}
                       </span>
                     </div>
-                    <div className="w-full h-2.5 rounded-full overflow-hidden" style={{ background: 'var(--or100)' }}>
+                    <div className="w-full h-2.5 rounded-full overflow-hidden" style={{ background: 'var(--track)' }}>
                       <div
                         className="h-full rounded-full transition-all duration-700"
                         style={{

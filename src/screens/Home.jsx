@@ -155,8 +155,8 @@ export default function Home({ onStartLesson, onNavigate }) {
 
         {/* ユーザー情報 */}
         <div className="clay-card p-4 flex items-center gap-4">
-          <div className="flex items-end" style={{ gap: 2 }}>
-            <img src={kuruImg} alt="クル" className="object-contain" style={{ width: 58, height: 58 }} />
+          <div className="flex items-end">
+            <img src={kuruImg} alt="クル" className="object-contain" style={{ width: 58, height: 58, marginBottom: 5, marginRight: -22, position: 'relative', zIndex: 1 }} />
             <img src={tsumujiiImg} alt="ツム爺" className="object-contain" style={{ width: 77, height: 77 }} />
           </div>
           <div className="flex-1">
@@ -190,7 +190,7 @@ export default function Home({ onStartLesson, onNavigate }) {
           </div>
           <div
             className="w-full h-3 rounded-full overflow-hidden"
-            style={{ background: 'var(--or100)' }}
+            style={{ background: 'var(--track)' }}
           >
             <div
               className="h-full rounded-full transition-all duration-700"

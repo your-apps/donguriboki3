@@ -1,5 +1,8 @@
 import { useState } from 'react';
-import { isFirstLaunch } from './services/storage';
+import { isFirstLaunch, requestPersistentStorage } from './services/storage';
+
+// 進捗データが消されにくいよう、起動時に一度だけ永続ストレージを要求する
+requestPersistentStorage();
 import Onboarding from './screens/Onboarding';
 import Home from './screens/Home';
 import Lesson from './screens/Lesson';

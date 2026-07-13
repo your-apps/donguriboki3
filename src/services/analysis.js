@@ -5,6 +5,9 @@
  * @returns {string} ツム爺スタイルのコメント
  */
 export function getWeakAnalysisComment(stageAccuracy, weakQuestions) {
+  if (Object.keys(stageAccuracy).length === 0 && weakQuestions.length === 0) {
+    return 'ここにはお主の学習の記録が集まるのじゃ。まずは最初の一問から始めてみるのじゃよ。';
+  }
   const weakStages = Object.entries(stageAccuracy)
     .filter(([, acc]) => acc < 60)
     .map(([stage]) => stage);

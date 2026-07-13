@@ -15,6 +15,7 @@
   --gr50: #F2F7ED;
   --gr300: #7BAF4A;
   --gr500: #3B6B18;
+  --track: #F1E4D3;
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -119,6 +120,70 @@ body {
   border-bottom: 7px solid transparent;
   border-right: 10px solid white;
   z-index: 1;
+}
+
+/* キャラが上にいる → しっぽをバブル上辺から上向きに出す（右寄り＝ツム爺の位置） */
+.bubble-tail-up::after {
+  content: '';
+  position: absolute;
+  top: -12px;
+  left: 62%;
+  margin-left: -9px;
+  width: 0;
+  height: 0;
+  border-left: 9px solid transparent;
+  border-right: 9px solid transparent;
+  border-bottom: 12px solid var(--or200);
+}
+.bubble-tail-up::before {
+  content: '';
+  position: absolute;
+  top: -9px;
+  left: 62%;
+  margin-left: -7px;
+  width: 0;
+  height: 0;
+  border-left: 7px solid transparent;
+  border-right: 7px solid transparent;
+  border-bottom: 10px solid white;
+  z-index: 1;
+}
+
+/* クレイ調レンジスライダー */
+.clay-range {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 12px;
+  border-radius: 999px;
+  background: var(--track);
+  box-shadow: inset 0 1.5px 3px rgba(74, 46, 14, 0.12);
+  outline: none;
+}
+.clay-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--or300);
+  border: 3px solid white;
+  box-shadow: 0 2px 5px rgba(74, 46, 14, 0.25);
+  cursor: pointer;
+}
+.clay-range::-moz-range-thumb {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--or300);
+  border: 3px solid white;
+  box-shadow: 0 2px 5px rgba(74, 46, 14, 0.25);
+  cursor: pointer;
+}
+.clay-range::-moz-range-track {
+  height: 12px;
+  border-radius: 999px;
+  background: var(--track);
 }
 
 /* キャラが右にいる → しっぽをバブル右側・縦中央から右向きに出す */

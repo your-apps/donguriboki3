@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { getUser, updateUser } from '../services/storage';
+import { getUser, updateUser, exportBackup, importBackup } from '../services/storage';
 
 export default function Settings({ onBack }) {
   const user = getUser();
@@ -7,11 +7,40 @@ export default function Settings({ onBack }) {
   const [goal, setGoal] = useState(user?.acorns_goal || 10);
   const [showHint, setShowHint] = useState(user?.show_hint ?? true);
   const [saved, setSaved] = useState(false);
+  const [backupCode, setBackupCode] = useState('');
+  const [copied, setCopied] = useState(false);
+  const [restoreCode, setRestoreCode] = useState('');
+  const [restoreMessage, setRestoreMessage] = useState(null);
 
   function handleSave() {
     updateUser({ name: name.trim() || user.name, acorns_goal: goal, show_hint: showHint });
     setSaved(true);
     setTimeout(() => setSaved(false), 1500);
+  }
+
+  function handleExport() {
+    const code = exportBackup();
+    if (code) setBackupCode(code);
+  }
+
+  async function handleCopy() {
+    try {
+      await navigator.clipboard.writeText(backupCode);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch {
+      // クリップボード不可の環境ではテキストを手動選択してもらう
+    }
+  }
+
+  function handleRestore() {
+    if (!restoreCode.trim()) return;
+    if (!window.confirm('現在の進捗はバックアップコードの内容で上書きされます。復元しますか？')) return;
+    if (importBackup(restoreCode)) {
+      window.location.reload();
+    } else {
+      setRestoreMessage('コードが正しくないようじゃ。もう一度確かめてくれんかの。');
+    }
   }
 
   return (
@@ -59,8 +88,7 @@ export default function Settings({ onBack }) {
               min={5} max={30} step={5}
               value={goal}
               onChange={e => setGoal(Number(e.target.value))}
-              className="w-full cursor-pointer"
-              style={{ accentColor: 'var(--or300)' }}
+              className="clay-range cursor-pointer"
             />
             <div className="flex justify-between text-xs mt-1" style={{ color: 'var(--br400)' }}>
               <span>5</span><span>30</span>
@@ -98,6 +126,68 @@ export default function Settings({ onBack }) {
         >
           {saved ? '保存しました！' : '保存する'}
         </button>
+
+        {/* バックアップ */}
+        <div className="clay-card p-5 space-y-3">
+          <h2 className="text-sm font-bold" style={{ color: 'var(--br600)' }}>バックアップ</h2>
+          <p className="text-xs leading-relaxed" style={{ color: 'var(--br400)' }}>
+            進捗はこの端末のブラウザに保存されています。バックアップコードを控えておくと、データが消えたときや機種変更のときに復元できます。
+          </p>
+
+          <button
+            className="clay-btn w-full py-3 font-bold text-white text-sm"
+            style={{ background: 'var(--or300)' }}
+            onClick={handleExport}
+          >
+            バックアップコードを作成
+          </button>
+
+          {backupCode && (
+            <div className="space-y-2">
+              <textarea
+                readOnly
+                value={backupCode}
+                rows={3}
+                className="w-full rounded-xl px-3 py-2 text-xs outline-none border-2 break-all"
+                style={{ borderColor: 'var(--or200)', background: 'var(--or50)', color: 'var(--br600)', resize: 'none' }}
+                onFocus={e => e.target.select()}
+              />
+              <button
+                className="clay-btn w-full py-2.5 font-bold text-white text-sm"
+                style={{ background: copied ? 'var(--gr500)' : 'var(--or500)' }}
+                onClick={handleCopy}
+              >
+                {copied ? 'コピーしました！' : 'コードをコピー'}
+              </button>
+            </div>
+          )}
+
+          <div className="pt-2 space-y-2" style={{ borderTop: '1px solid var(--or100)' }}>
+            <label htmlFor="restore-code" className="block text-xs font-bold" style={{ color: 'var(--br400)' }}>
+              コードから復元
+            </label>
+            <textarea
+              id="restore-code"
+              value={restoreCode}
+              onChange={e => { setRestoreCode(e.target.value); setRestoreMessage(null); }}
+              rows={3}
+              placeholder="バックアップコードを貼り付け"
+              className="w-full rounded-xl px-3 py-2 text-xs outline-none border-2 break-all"
+              style={{ borderColor: 'var(--or200)', background: 'var(--or50)', color: 'var(--br600)', resize: 'none' }}
+            />
+            {restoreMessage && (
+              <p className="text-xs font-bold" style={{ color: '#E85A4A' }}>{restoreMessage}</p>
+            )}
+            <button
+              className="clay-btn w-full py-2.5 font-bold text-white text-sm"
+              style={{ background: restoreCode.trim() ? 'var(--br400)' : '#D4C4A8' }}
+              onClick={handleRestore}
+              disabled={!restoreCode.trim()}
+            >
+              復元する
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );

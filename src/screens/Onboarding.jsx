@@ -51,12 +51,12 @@ export default function Onboarding({ onComplete }) {
   return (
     <div className="app-container flex flex-col items-center justify-center px-6 gap-6">
       {/* キャラクター */}
-      <div className="flex items-end justify-center gap-4">
+      <div className="flex items-end justify-center">
         <img
           src={kuruImg}
           alt="クル"
           className="w-24 h-24 object-contain"
-          style={{ filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.12))' }}
+          style={{ filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.12))', marginBottom: 5, marginRight: -24, position: 'relative', zIndex: 1 }}
         />
         <img
           src={tsumujiiImg}
@@ -64,6 +64,14 @@ export default function Onboarding({ onComplete }) {
           className="w-32 h-32 object-contain"
           style={{ filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.12))' }}
         />
+      </div>
+
+      {/* ツム爺の吹き出し（キャラ直下・しっぽは上のツム爺へ） */}
+      <div
+        className="bubble bubble-tail-up w-full text-sm"
+        style={{ color: 'var(--br600)', marginTop: -8 }}
+      >
+        名前を教えてくれんかの。
       </div>
 
       {/* タイトル */}
@@ -80,14 +88,6 @@ export default function Onboarding({ onComplete }) {
         <p className="text-sm" style={{ color: 'var(--br400)' }}>
           楽しく学ぼう、日商簿記3級！
         </p>
-      </div>
-
-      {/* ツム爺の吹き出し */}
-      <div
-        className="bubble bubble-tail-left w-full text-sm"
-        style={{ color: 'var(--br600)' }}
-      >
-        名前を教えてくれんかの。
       </div>
 
       {/* 名前入力 */}

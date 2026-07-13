@@ -55,7 +55,9 @@ export default function Glossary() {
         <div className="flex items-end gap-3">
           <img src={tsumujiiImg} alt="ツム爺" className="object-contain flex-shrink-0" style={{ width: 67, height: 67 }} />
           <div className="bubble bubble-tail-left text-sm flex-1" style={{ color: 'var(--br600)', marginBottom: 14 }}>
-            分からない言葉があれば、ここで調べるのじゃ。
+            {unlockedNames.size > 0
+              ? '分からない言葉があれば、ここで調べるのじゃ。'
+              : 'ステージをクリアすると、用語が少しずつ増えていくのじゃよ。'}
           </div>
         </div>
 

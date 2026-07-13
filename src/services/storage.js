@@ -251,6 +251,44 @@ export function unlockGlossaryCategory(stageId) {
   }
 }
 
+/** ブラウザに永続ストレージを要求する（削除されにくくする） */
+export function requestPersistentStorage() {
+  if (navigator.storage?.persist) {
+    navigator.storage.persist().catch(() => {});
+  }
+}
+
+const BACKUP_PREFIX = 'DGB1:';
+
+/** 全データをバックアップコード（文字列）にして返す。データがなければ null */
+export function exportBackup() {
+  const raw = localStorage.getItem(KEY);
+  if (!raw) return null;
+  const bytes = new TextEncoder().encode(raw);
+  let bin = '';
+  for (let i = 0; i < bytes.length; i += 0x8000) {
+    bin += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+  }
+  return BACKUP_PREFIX + btoa(bin);
+}
+
+/** バックアップコードからデータを復元する。成功なら true */
+export function importBackup(code) {
+  const trimmed = (code || '').trim();
+  if (!trimmed.startsWith(BACKUP_PREFIX)) return false;
+  try {
+    const bin = atob(trimmed.slice(BACKUP_PREFIX.length));
+    const bytes = Uint8Array.from(bin, c => c.charCodeAt(0));
+    const json = new TextDecoder().decode(bytes);
+    const data = JSON.parse(json);
+    if (!data || typeof data !== 'object' || !data.users || !data.active_user) return false;
+    localStorage.setItem(KEY, JSON.stringify(data));
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export function calcAcorns(stageId, correctCount, totalCount) {
   const ratio = correctCount / totalCount;
   const table = {
