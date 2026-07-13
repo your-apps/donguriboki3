@@ -30,7 +30,7 @@ export default defineConfig({
       },
     }),
   ],
-  base: '/donguriboki/',
+  base: '/donguriboki3/',
   build: {
     rolldownOptions: {
       output: {
