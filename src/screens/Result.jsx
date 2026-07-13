@@ -1,8 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import tsumujiiImg from '../assets/tsumujii.webp';
 import AcornIcon from '../components/AcornIcon';
-import { addAcorns, updateProgress, updateStreak, calcAcorns, getUser } from '../services/storage';
-import { getWeakAnalysisComment, calcStageAccuracy } from '../services/analysis';
+import { addAcorns, updateProgress, updateStreak, calcAcorns } from '../services/storage';
 
 export default function Result({ stageId, setId, correct, total, onHome }) {
   const [acornsEarned, setAcornsEarned] = useState(0);
@@ -22,11 +21,6 @@ export default function Result({ stageId, setId, correct, total, onHome }) {
 
   const acc = Math.round((correct / total) * 100);
   const comment = getTsumujiiComment(acc);
-
-  // 苦手分析コメント（保存後のユーザーデータを参照）
-  const user = getUser();
-  const stageAccuracy = calcStageAccuracy(user?.progress);
-  const analysisComment = getWeakAnalysisComment(stageAccuracy, user?.weak_questions ?? []);
 
   return (
     <div className="app-container flex flex-col items-center justify-center px-6 gap-6">
@@ -74,11 +68,6 @@ export default function Result({ stageId, setId, correct, total, onHome }) {
             style={{ color: 'var(--br600)' }}
           >
             <p>{comment}</p>
-            {analysisComment && (
-              <p className="mt-2 pt-2" style={{ borderTop: '1px solid var(--or100)' }}>
-                {analysisComment}
-              </p>
-            )}
           </div>
         </div>
       </div>

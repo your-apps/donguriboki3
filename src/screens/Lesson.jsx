@@ -6,23 +6,35 @@ import { stageMap, findQuestion } from '../data/questions/index';
 import { recordWrong, recordCorrect, getDueReviewIds, unlockGlossaryCategory, getUser } from '../services/storage';
 
 // クルの励ましコメント（ランダム選択）
-const KURU_COMMENTS = [
+// タイミング別のクルのコメント（1問目／途中／最終問題）
+const KURU_COMMENTS_START = [
   'さあ、始めよう！クルも応援してるよ！',
   'よし、いくよ！全力で頑張ろう！',
   'ドキドキするね！一緒に頑張ろう！',
   '深呼吸して、落ち着いていこう！',
   '今日も頑張れ！クルが見てるよ！',
-  'じっくり考えてね！応援してるよ！',
-  'クルも一緒に頑張るよ！',
-  '大丈夫、できるよ！',
+];
+const KURU_COMMENTS_MIDDLE = [
   'つぎはどんな問題かな？',
-  'ファイト！クルを信じて！',
+  'その調子！集中していこう！',
+  'いい感じ！このまま続けよう！',
   'ゆっくり、確実に！',
   '落ち着いて読めば大丈夫！',
-  '焦らなくていいよ！',
+  'クルも一緒に頑張ってるよ！',
 ];
-function getKuruComment() {
-  return KURU_COMMENTS[Math.floor(Math.random() * KURU_COMMENTS.length)];
+const KURU_COMMENTS_LAST = [
+  'ラスト1問！最後までがんばれ！',
+  'これで最後だよ！集中していこう！',
+  'あと1問！クルを信じて！',
+];
+
+// index: これから表示する問題の番号（0始まり）, total: 問題総数
+function getKuruComment(index, total) {
+  let pool;
+  if (index === 0) pool = KURU_COMMENTS_START;
+  else if (index === total - 1) pool = KURU_COMMENTS_LAST;
+  else pool = KURU_COMMENTS_MIDDLE;
+  return pool[Math.floor(Math.random() * pool.length)];
 }
 
 // ランダムシャッフル
@@ -62,7 +74,7 @@ export default function Lesson({ stageId, setId, revived, revivedFromIdx, revive
   const [shakeKey, setShakeKey] = useState(0);
   const [timeLeft, setTimeLeft] = useState(null);
   const [showExitDialog, setShowExitDialog] = useState(false);
-  const [kuruComment, setKuruComment] = useState(() => getKuruComment());
+  const [kuruComment, setKuruComment] = useState(() => getKuruComment(0, 0));
   const timerRef = useRef(null);
   const gameOverFiredRef = useRef(false);
   const showHintSetting = getUser()?.show_hint ?? true;
@@ -74,6 +86,7 @@ export default function Lesson({ stageId, setId, revived, revivedFromIdx, revive
       setQuestions(revivedQuestions);
       setCurrent(revivedFromIdx ?? 0);
       setResults(revivedResults ?? []);
+      setKuruComment(getKuruComment(revivedFromIdx ?? 0, revivedQuestions.length));
       gameOverFiredRef.current = false;
       return;
     }
@@ -185,7 +198,7 @@ export default function Lesson({ stageId, setId, revived, revivedFromIdx, revive
       onFinish({ stageId, setId, results: finalResults, correct, total: questions.length });
       return;
     }
-    setKuruComment(getKuruComment());
+    setKuruComment(getKuruComment(nextIdx, questions.length));
     setCurrent(nextIdx);
     setSelected(null);
     setAnswered(false);

@@ -9,7 +9,7 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.svg', 'apple-touch-icon.png'],
+      includeAssets: ['favicon-96x96.png', 'favicon-32x32.png', 'apple-touch-icon.png'],
       manifest: {
         name: 'どんぐり簿記3級',
         short_name: 'どんぐり簿記',
