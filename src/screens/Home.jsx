@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import kuruImg from '../assets/kuru.webp';
 import tsumujiiImg from '../assets/tsumujii.webp';
 import AcornIcon from '../components/AcornIcon';
+import InstallPrompt from '../components/InstallPrompt';
 import { getUser, updateStreak } from '../services/storage';
 import { stages } from '../data/questions/index';
 
@@ -208,6 +209,9 @@ export default function Home({ onStartLesson, onNavigate }) {
             </p>
           )}
         </div>
+
+        {/* アプリインストール案内（インストール済み・非対応環境では非表示） */}
+        <InstallPrompt />
 
         {/* ステージ一覧 */}
         <div>
