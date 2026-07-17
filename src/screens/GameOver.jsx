@@ -27,6 +27,9 @@ export default function GameOver({ sessionData, onRevive, onHome }) {
         <p className="text-sm" style={{ color: 'var(--br400)' }}>
           焦らずともよい。休んでまた来るのじゃ。
         </p>
+        <p className="text-sm mt-2 font-bold" style={{ color: 'var(--or500)' }}>
+          がんばった分じゃ。どんぐりを1個あげよう。
+        </p>
       </div>
 
       {canRevive && (

@@ -289,28 +289,29 @@ export function importBackup(code) {
   }
 }
 
+// クリア時のミス数で報酬を決定：noMiss=ノーミス, oneMiss=1ミス, twoMiss=2ミス
 export function calcAcorns(stageId, correctCount, totalCount) {
-  const ratio = correctCount / totalCount;
+  const misses = totalCount - correctCount;
   const table = {
-    stage1:  { half: 1, over: 3,  eight: 6,  full: 10 },
-    stage2:  { half: 1, over: 3,  eight: 6,  full: 10 },
-    stage3:  { half: 1, over: 4,  eight: 8,  full: 13 },
-    stage4:  { half: 1, over: 4,  eight: 8,  full: 13 },
-    stage5:  { half: 1, over: 4,  eight: 8,  full: 13 },
-    stage6:  { half: 1, over: 5,  eight: 10, full: 16 },
-    stage7:  { half: 1, over: 6,  eight: 12, full: 20 },
-    stage8:  { half: 1, over: 6,  eight: 12, full: 20 },
-    stage9:  { half: 1, over: 7,  eight: 14, full: 22 },
-    stage14: { half: 1, over: 7,  eight: 14, full: 22 },  // 株式会社・税金（表示順10）
-    stage10: { half: 1, over: 7,  eight: 14, full: 22 },
-    stage11: { half: 1, over: 8,  eight: 16, full: 25 },
-    stage15: { half: 1, over: 8,  eight: 16, full: 25 },  // 伝票会計（表示順13）
-    stage12: { half: 1, over: 8,  eight: 16, full: 25 },
-    stage13: { half: 2, over: 10, eight: 20, full: 30 },
+    stage1:  { twoMiss: 3,  oneMiss: 6,  noMiss: 10 },
+    stage2:  { twoMiss: 3,  oneMiss: 6,  noMiss: 10 },
+    stage3:  { twoMiss: 4,  oneMiss: 8,  noMiss: 13 },
+    stage4:  { twoMiss: 4,  oneMiss: 8,  noMiss: 13 },
+    stage5:  { twoMiss: 4,  oneMiss: 8,  noMiss: 13 },
+    stage6:  { twoMiss: 5,  oneMiss: 10, noMiss: 16 },
+    stage7:  { twoMiss: 6,  oneMiss: 12, noMiss: 20 },
+    stage8:  { twoMiss: 6,  oneMiss: 12, noMiss: 20 },
+    stage9:  { twoMiss: 7,  oneMiss: 14, noMiss: 22 },
+    stage14: { twoMiss: 7,  oneMiss: 14, noMiss: 22 },  // 株式会社・税金（表示順10）
+    stage10: { twoMiss: 7,  oneMiss: 14, noMiss: 22 },
+    stage11: { twoMiss: 8,  oneMiss: 16, noMiss: 25 },
+    stage15: { twoMiss: 8,  oneMiss: 16, noMiss: 25 },  // 伝票会計（表示順13）
+    stage12: { twoMiss: 8,  oneMiss: 16, noMiss: 25 },
+    stage16: { twoMiss: 9,  oneMiss: 18, noMiss: 28 },  // 実践仕訳演習（表示順15）
+    stage13: { twoMiss: 10, oneMiss: 20, noMiss: 30 },
   };
   const t = table[stageId] || table.stage1;
-  if (ratio === 1)     return t.full;
-  if (ratio >= 0.8)    return t.eight;
-  if (ratio > 0.5)     return t.over;
-  return t.half;
+  if (misses <= 0) return t.noMiss;
+  if (misses === 1) return t.oneMiss;
+  return t.twoMiss;
 }

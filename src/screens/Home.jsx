@@ -21,12 +21,15 @@ const STAGE_META = [
   { desc: '補助簿の種類と商品有高帳の計算' },         // 12 補助簿
   { desc: '3伝票制と仕訳日計表のしくみ' },           // 13 伝票会計（新）
   { desc: '試算表から財務諸表を作る' },              // 14 試算表・精算表
-  { desc: '全分野を横断する総合模擬試験' },          // 15 本番模擬試験
+  { desc: '本試験形式で仕訳を自分で組み立てる' },     // 15 実践仕訳演習
+  { desc: '勘定記入・補助簿・台帳（第2問対策）' },     // 16 帳簿と勘定
+  { desc: '本試験第3問形式の決算大問に挑戦' },        // 17 決算問題
+  { desc: '全分野を横断する総合模擬試験' },          // 18 本番模擬試験
 ];
 
 // ステージアイコン背景グラデーション
 // Stage1（明るいアプリコット）→ Stage15（濃いダークエスプレッソ）へ段階的に成熟
-const STAGE_GRADIENTS = Array(15).fill('linear-gradient(135deg, #FF8C00 0%, #E55000 100%)');
+const STAGE_GRADIENTS = Array(18).fill('linear-gradient(135deg, #FF8C00 0%, #E55000 100%)');
 
 function StageIcon({ index }) {
   const sw = { strokeWidth: '1.8', strokeLinecap: 'round', strokeLinejoin: 'round' };
@@ -59,7 +62,13 @@ function StageIcon({ index }) {
     <><rect x="4" y="6" width="12" height="15" rx="1.5" {...sw}/><path d="M8 4h11a1 1 0 011 1v12" {...sw}/><path d="M7 10h6M7 13h6M7 16h4" {...sw}/></>,
     /* 14 試算表・精算表：グリッド表 */
     <><rect x="3" y="3" width="18" height="18" rx="1.5" {...sw}/><path d="M3 9h18M3 15h18M9 3v18M15 3v18" {...sw}/></>,
-    /* 15 模擬試験：トロフィー */
+    /* 15 実践仕訳演習：ペンで記入 */
+    <><path d="M12 20h9" {...sw}/><path d="M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4L16.5 3.5z" {...sw}/></>,
+    /* 16 帳簿と勘定：T字勘定 */
+    <><path d="M3 5h18" {...sw}/><path d="M12 5v15" {...sw}/><path d="M5 10h4M5 14h4M15 10h4M15 14h4" {...sw}/></>,
+    /* 17 決算問題：電卓 */
+    <><rect x="4" y="2" width="16" height="20" rx="2" {...sw}/><path d="M8 6h8" {...sw}/><path d="M8 11h.01M12 11h.01M16 11h.01M8 15h.01M12 15h.01M16 15h.01M8 19h.01M12 19h.01M16 19h.01" strokeWidth="2.4" strokeLinecap="round"/></>,
+    /* 18 模擬試験：トロフィー */
     <><path d="M8 21h8M12 17v4" {...sw}/><path d="M7 4H5v5a7 7 0 0014 0V4h-2" {...sw}/><path d="M5 4H2v2a4 4 0 003.82 4M19 4h3v2a4 4 0 01-3.82 4" {...sw}/></>,
   ];
   return (

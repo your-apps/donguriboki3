@@ -12,15 +12,16 @@ export default function Result({ stageId, setId, correct, total, onHome }) {
     savedRef.current = true;
     const earned = calcAcorns(stageId, correct, total);
     const acc = Math.round((correct / total) * 100);
-    const cleared = acc >= 60;
+    // 必要正解数に到達した時点でこの画面に来るため、到達＝クリア
     addAcorns(earned);
-    updateProgress(stageId, setId, cleared, acc);
+    updateProgress(stageId, setId, true, acc);
     updateStreak();
     setAcornsEarned(earned);
   }, [stageId, setId, correct, total]);
 
   const acc = Math.round((correct / total) * 100);
-  const comment = getTsumujiiComment(acc);
+  const misses = total - correct;
+  const comment = getTsumujiiComment(misses);
 
   return (
     <div className="app-container flex flex-col items-center justify-center px-6 gap-6">
@@ -37,13 +38,18 @@ export default function Result({ stageId, setId, correct, total, onHome }) {
 
         <div className="flex justify-center gap-6 text-sm">
           <div>
-            <div className="font-bold text-lg" style={{ color: 'var(--br600)' }}>{correct}</div>
+            <div className="font-bold text-lg" style={{ color: 'var(--br600)' }}>{total}</div>
+            <div style={{ color: 'var(--br400)' }}>回答</div>
+          </div>
+          <div className="w-px" style={{ background: 'var(--or100)' }}/>
+          <div>
+            <div className="font-bold text-lg" style={{ color: 'var(--gr500)' }}>{correct}</div>
             <div style={{ color: 'var(--br400)' }}>正解</div>
           </div>
           <div className="w-px" style={{ background: 'var(--or100)' }}/>
           <div>
-            <div className="font-bold text-lg" style={{ color: 'var(--br600)' }}>{total - correct}</div>
-            <div style={{ color: 'var(--br400)' }}>不正解</div>
+            <div className="font-bold text-lg" style={{ color: misses > 0 ? '#E85A4A' : 'var(--br600)' }}>{misses}</div>
+            <div style={{ color: 'var(--br400)' }}>ミス</div>
           </div>
         </div>
 
@@ -83,11 +89,11 @@ export default function Result({ stageId, setId, correct, total, onHome }) {
   );
 }
 
-function getTsumujiiComment(acc) {
-  if (acc === 100) return 'すべて正しく答えたのう。よう頑張ったのう。次も、その気持ちで続けるのじゃ。';
-  if (acc >= 70)   return 'よくやったのう。惜しいところもあったが、それでよい。確かな力がついておるぞ。';
-  if (acc >= 60)   return '通ったのう。まだ迷いがあるようじゃが、それが今のお主の姿じゃ。大切にするのじゃ。';
-  return '焦らずともよい。どんぐりも、一粒一粒積み上げるものじゃ。また来るのじゃ。';
+// クリア時のミス数に応じたコメント
+function getTsumujiiComment(misses) {
+  if (misses <= 0) return 'ひとつもつまずかず、見事なものじゃ。その調子で続けるのじゃ。';
+  if (misses === 1) return 'よくやったのう。ひとつの間違いも、次への学びじゃ。確かな力がついておるぞ。';
+  return 'ぎりぎりまでよう粘ったのう。間違えた問題こそ、お主を強くするのじゃ。';
 }
 
 function AccuracyRing({ pct }) {

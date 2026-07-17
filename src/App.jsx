@@ -1,5 +1,18 @@
 import { useState } from 'react';
-import { isFirstLaunch, requestPersistentStorage } from './services/storage';
+import { isFirstLaunch, requestPersistentStorage, addAcorns } from './services/storage';
+import { stageMap } from './data/questions/index';
+import StatementLesson from './screens/StatementLesson';
+import ExamLesson from './screens/ExamLesson';
+
+// 大問モード（表の空欄補充）のセットかどうか
+function isStatementSet(stageId, setId) {
+  return !!stageMap[stageId]?.sets.find(s => s.id === setId)?.statement;
+}
+
+// 模擬試験モードのセットかどうか
+function isExamSet(stageId, setId) {
+  return !!stageMap[stageId]?.sets.find(s => s.id === setId)?.exam;
+}
 
 // 進捗データが消されにくいよう、起動時に一度だけ永続ストレージを要求する
 requestPersistentStorage();
@@ -32,6 +45,7 @@ export default function App() {
   }
 
   function handleGameOver(data) {
+    addAcorns(1); // 参加賞：ゲームオーバーでもどんぐり1個
     setGameOverState(data);
     setScreen('gameover');
   }
@@ -103,17 +117,31 @@ export default function App() {
       )}
 
       {screen === 'lesson' && lessonState && (
-        <Lesson
-          stageId={lessonState.stageId}
-          setId={lessonState.setId}
-          revived={lessonState.revived}
-          revivedFromIdx={lessonState.revivedFromIdx}
-          revivedResults={lessonState.revivedResults}
-          revivedQuestions={lessonState.revivedQuestions}
-          onFinish={handleLessonFinish}
-          onGameOver={handleGameOver}
-          onHome={goHome}
-        />
+        isExamSet(lessonState.stageId, lessonState.setId) ? (
+          <ExamLesson
+            stageId={lessonState.stageId}
+            setId={lessonState.setId}
+            onHome={goHome}
+          />
+        ) : isStatementSet(lessonState.stageId, lessonState.setId) ? (
+          <StatementLesson
+            stageId={lessonState.stageId}
+            setId={lessonState.setId}
+            onHome={goHome}
+          />
+        ) : (
+          <Lesson
+            stageId={lessonState.stageId}
+            setId={lessonState.setId}
+            revived={lessonState.revived}
+            revivedFromIdx={lessonState.revivedFromIdx}
+            revivedResults={lessonState.revivedResults}
+            revivedQuestions={lessonState.revivedQuestions}
+            onFinish={handleLessonFinish}
+            onGameOver={handleGameOver}
+            onHome={goHome}
+          />
+        )
       )}
 
       {screen === 'gameover' && gameOverState && (

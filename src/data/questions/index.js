@@ -13,10 +13,14 @@ import { stage12 } from './stage12.js';
 import { stage13 } from './stage13.js';
 import { stage14 } from './stage14.js';
 import { stage15 } from './stage15.js';
+import { stage16 } from './stage16.js';
+import { stage17 } from './stage17.js';
+import { stage18 } from './stage18.js';
 
 // 表示順（配列の並びがステージ番号になる）。
 // stage14（株式会社の資本と税金）は特殊仕訳の後・決算整理の前、
-// stage15（伝票会計）は補助簿の後・試算表の前に挿入する。
+// stage15（伝票会計）は補助簿の後・試算表の前、
+// stage16（実践仕訳演習）は模擬試験の直前に挿入する。
 export const stages = [
   stage1, stage2, stage3, stage4, stage5, stage6, stage7, stage8, stage9,
   stage14,   // 10: 株式会社の資本と税金
@@ -24,7 +28,10 @@ export const stages = [
   stage11,   // 12: 補助簿を使いこなす
   stage15,   // 13: 伝票会計をマスター
   stage12,   // 14: 試算表・精算表・財務諸表
-  stage13,   // 15: 本番模擬試験
+  stage16,   // 15: 実践仕訳演習（本試験第1問形式）
+  stage18,   // 16: 帳簿と勘定の総仕上げ（本試験第2問形式）
+  stage17,   // 17: 決算問題（本試験第3問形式）
+  stage13,   // 18: 本番模擬試験
 ];
 
 export const stageMap = Object.fromEntries(stages.map(s => [s.id, s]));

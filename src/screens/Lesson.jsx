@@ -2,6 +2,8 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import HeartIcon from '../components/HeartIcon';
 import ProgressBar from '../components/ProgressBar';
 import CharaBubble from '../components/CharaBubble';
+import JournalBuilder from '../components/JournalBuilder';
+import { emptyEntry, isEntryComplete, gradeJournalEntry } from '../services/journal';
 import { stageMap, findQuestion } from '../data/questions/index';
 import { recordWrong, recordCorrect, getDueReviewIds, unlockGlossaryCategory, getUser } from '../services/storage';
 
@@ -23,18 +25,24 @@ const KURU_COMMENTS_MIDDLE = [
   'クルも一緒に頑張ってるよ！',
 ];
 const KURU_COMMENTS_LAST = [
-  'ラスト1問！最後までがんばれ！',
-  'これで最後だよ！集中していこう！',
+  'あと1問正解でクリアだよ！',
+  'クリアまであと1問！がんばれ！',
   'あと1問！クルを信じて！',
 ];
 
-// index: これから表示する問題の番号（0始まり）, total: 問題総数
-function getKuruComment(index, total) {
+// first: セッション最初の問題か, remaining: クリアまでの残り正解数（従来型セッションは null）
+function getKuruComment({ first, remaining }) {
   let pool;
-  if (index === 0) pool = KURU_COMMENTS_START;
-  else if (index === total - 1) pool = KURU_COMMENTS_LAST;
+  if (first) pool = KURU_COMMENTS_START;
+  else if (remaining === 1) pool = KURU_COMMENTS_LAST;
   else pool = KURU_COMMENTS_MIDDLE;
   return pool[Math.floor(Math.random() * pool.length)];
+}
+
+// セッションの必要正解数（模擬試験のみ8、他は5。セット定義の requiredCorrect で個別上書き可能）
+function calcRequiredCorrect(stageId, set) {
+  if (stageId === 'weak' || !set) return null; // 苦手セッションは従来型（全問解いたら終了）
+  return set.requiredCorrect ?? (stageId === 'stage13' ? 8 : 5);
 }
 
 // ランダムシャッフル
@@ -49,6 +57,7 @@ function shuffleArray(arr) {
 
 // 選択肢をシャッフルして正解インデックスを更新
 function prepareQuestion(q) {
+  if (q.type === 'journal_entry') return q; // 組み立て型は選択肢なし
   const n = q.choices.length;
   const perm = shuffleArray([...Array(n).keys()]);
   const newChoices = perm.map(i => q.choices[i]);
@@ -74,7 +83,15 @@ export default function Lesson({ stageId, setId, revived, revivedFromIdx, revive
   const [shakeKey, setShakeKey] = useState(0);
   const [timeLeft, setTimeLeft] = useState(null);
   const [showExitDialog, setShowExitDialog] = useState(false);
-  const [kuruComment, setKuruComment] = useState(() => getKuruComment(0, 0));
+  const [kuruComment, setKuruComment] = useState(() => getKuruComment({ first: true }));
+  const [builderEntry, setBuilderEntry] = useState(() => emptyEntry()); // 仕訳組み立て型の入力状態
+  const [wasCorrect, setWasCorrect] = useState(false); // 直近の回答の正誤
+
+  // 必要正解数（stageId/setIdから導出。苦手セッションは null = 従来型）
+  const required = calcRequiredCorrect(
+    stageId,
+    stageId !== 'weak' ? stageMap[stageId]?.sets.find(s => s.id === setId) : null
+  );
   const timerRef = useRef(null);
   const gameOverFiredRef = useRef(false);
   const showHintSetting = getUser()?.show_hint ?? true;
@@ -85,8 +102,13 @@ export default function Lesson({ stageId, setId, revived, revivedFromIdx, revive
     if (revived && revivedQuestions?.length > 0) {
       setQuestions(revivedQuestions);
       setCurrent(revivedFromIdx ?? 0);
-      setResults(revivedResults ?? []);
-      setKuruComment(getKuruComment(revivedFromIdx ?? 0, revivedQuestions.length));
+      const prevResults = revivedResults ?? [];
+      setResults(prevResults);
+      const corrects = prevResults.filter(r => r.correct).length;
+      setKuruComment(getKuruComment({
+        first: prevResults.length === 0,
+        remaining: required != null ? required - corrects : null,
+      }));
       gameOverFiredRef.current = false;
       return;
     }
@@ -163,11 +185,16 @@ export default function Lesson({ stageId, setId, revived, revivedFromIdx, revive
   }, [answered]);
 
   const handleCheck = useCallback(() => {
-    if (selected === null || answered) return;
+    const isBuilder = q?.type === 'journal_entry';
+    if (answered) return;
+    if (isBuilder ? !isEntryComplete(builderEntry) : selected === null) return;
     clearInterval(timerRef.current);
 
-    const correct = selected === q.answer;
+    const correct = isBuilder
+      ? gradeJournalEntry(builderEntry, q.answer)
+      : selected === q.answer;
     setAnswered(true);
+    setWasCorrect(correct);
 
     if (correct) {
       recordCorrect(q.id);
@@ -186,23 +213,51 @@ export default function Lesson({ stageId, setId, revived, revivedFromIdx, revive
       }
     }
     setResults(prev => [...prev, { id: q.id, correct, selected }]);
-  }, [selected, answered, q, hearts, stageId, setId, questions, results, revived, current, onGameOver]);
+  }, [selected, answered, q, hearts, stageId, setId, questions, results, revived, current, onGameOver, builderEntry]);
 
   const handleNext = useCallback(() => {
-    const nextIdx = current + 1;
-    if (nextIdx >= questions.length) {
-      const finalResults = [...results];
-      const correct = finalResults.filter(r => r.correct).length;
-      // ステージクリア時に用語集カテゴリを解放
-      if (stageId !== 'weak') unlockGlossaryCategory(stageId);
-      onFinish({ stageId, setId, results: finalResults, correct, total: questions.length });
+    const correctCount = results.filter(r => r.correct).length;
+
+    // 必要正解数に到達したらクリア（回答数ベースで結果を渡す）
+    if (required != null && correctCount >= required) {
+      unlockGlossaryCategory(stageId);
+      onFinish({ stageId, setId, results: [...results], correct: correctCount, total: results.length });
       return;
     }
-    setKuruComment(getKuruComment(nextIdx, questions.length));
+
+    const nextIdx = current + 1;
+    if (nextIdx >= questions.length) {
+      // 従来型（苦手セッション）：全問回答で終了
+      if (required == null) {
+        onFinish({ stageId, setId, results: [...results], correct: correctCount, total: questions.length });
+        return;
+      }
+      // 出題キューが尽きた：このセッションで間違えた問題をリサイクルして継続
+      const wrongIds = new Set(results.filter(r => !r.correct).map(r => r.id));
+      const seen = new Set();
+      const recycled = shuffleArray(questions.filter(qq => {
+        if (!wrongIds.has(qq.id) || seen.has(qq.id)) return false;
+        seen.add(qq.id);
+        return true;
+      }));
+      if (recycled.length === 0) {
+        // 論理上到達しない防御：全問正解済みなら必要数に達しているはず
+        onFinish({ stageId, setId, results: [...results], correct: correctCount, total: results.length });
+        return;
+      }
+      setQuestions(prev => [...prev, ...recycled]);
+    }
+
+    setKuruComment(getKuruComment({
+      first: false,
+      remaining: required != null ? required - correctCount : null,
+    }));
     setCurrent(nextIdx);
     setSelected(null);
     setAnswered(false);
-  }, [current, questions.length, results, stageId, setId, onFinish]);
+    setBuilderEntry(emptyEntry());
+    setWasCorrect(false);
+  }, [current, questions, results, required, stageId, setId, onFinish]);
 
   if (!q || questions.length === 0) return (
     <div className="app-container flex items-center justify-center">
@@ -210,9 +265,14 @@ export default function Lesson({ stageId, setId, revived, revivedFromIdx, revive
     </div>
   );
 
-  const isCorrect = answered && selected === q.answer;
-  const isWrong = answered && (selected !== q.answer);
+  const isBuilder = q.type === 'journal_entry';
+  const isCorrect = answered && (isBuilder ? wasCorrect : selected === q.answer);
+  const isWrong = answered && !isCorrect;
   const isJournal = q.type === 'journal';
+  const correctCount = results.filter(r => r.correct).length;
+  const sessionDone = required != null
+    ? correctCount >= required
+    : current + 1 >= questions.length;
 
   return (
     <div className="app-container flex flex-col">
@@ -267,7 +327,7 @@ export default function Lesson({ stageId, setId, revived, revivedFromIdx, revive
               </svg>
             </button>
             <span className="text-xs font-medium" style={{ color: 'var(--br400)' }}>
-              {current + 1} / {questions.length}問
+              {required != null ? `正解 ${correctCount} / ${required}` : `${current + 1} / ${questions.length}問`}
               {q.id.startsWith('s') && results.findIndex((_, i) => i === current) < 0 &&
                 getDueReviewIds().includes(q.id) && (
                   <span className="ml-2 text-xs px-1.5 py-0.5 rounded-full" style={{ background: '#FFF0EE', color: '#E85A4A' }}>
@@ -291,7 +351,10 @@ export default function Lesson({ stageId, setId, revived, revivedFromIdx, revive
             </div>
           </div>
         </div>
-        <ProgressBar current={current} total={questions.length} />
+        <ProgressBar
+          current={required != null ? correctCount : current}
+          total={required != null ? required : questions.length}
+        />
       </div>
 
       <div className="flex-1 overflow-y-auto px-4 pb-4 space-y-3">
@@ -307,7 +370,20 @@ export default function Lesson({ stageId, setId, revived, revivedFromIdx, revive
           </p>
         </div>
 
+        {/* 仕訳組み立て（journal_entry型） */}
+        {isBuilder && (
+          <div key={`builder-${current}`} className="animate-fade-up">
+            <JournalBuilder
+              question={q}
+              entry={builderEntry}
+              onChange={setBuilderEntry}
+              answered={answered}
+            />
+          </div>
+        )}
+
         {/* 選択肢 */}
+        {!isBuilder && (
         <div className={`space-y-2`} key={`choices-${current}`}>
           {q.choices.map((choice, idx) => {
             let bg = 'white';
@@ -358,6 +434,7 @@ export default function Lesson({ stageId, setId, revived, revivedFromIdx, revive
             );
           })}
         </div>
+        )}
 
         {/* ヒント（設定でONの場合のみ） */}
         {!answered && q.hint && showHintSetting && (
@@ -379,7 +456,9 @@ export default function Lesson({ stageId, setId, revived, revivedFromIdx, revive
           >
             <p className="text-sm font-bold mb-1" style={{ color: 'var(--br400)' }}>解説</p>
             <p className="text-sm leading-relaxed" style={{ color: 'var(--br600)' }}>
-              {(selected >= 0 && q.explanations?.[`wrong_${selected}`]) || q.hint}
+              {isBuilder
+                ? (q.explanation || q.hint)
+                : (selected >= 0 && q.explanations?.[`wrong_${selected}`]) || q.hint}
             </p>
           </div>
         )}
@@ -391,7 +470,10 @@ export default function Lesson({ stageId, setId, revived, revivedFromIdx, revive
             className={`rounded-2xl py-3 px-5 text-center font-bold text-white text-sm ${isWrong ? 'animate-shake' : 'animate-bounce-in'}`}
             style={{ background: isCorrect ? 'var(--gr500)' : '#E85A4A' }}
           >
-            {isCorrect ? '正解！' : selected === -1 ? `時間切れ！正解は選択肢${String.fromCharCode(65 + q.answer)}` : `不正解…  正解は選択肢${String.fromCharCode(65 + q.answer)}`}
+            {isCorrect ? '正解！'
+              : isBuilder ? '不正解… 正解の仕訳を確認しよう'
+              : selected === -1 ? `時間切れ！正解は選択肢${String.fromCharCode(65 + q.answer)}`
+              : `不正解…  正解は選択肢${String.fromCharCode(65 + q.answer)}`}
           </div>
         )}
       </div>
@@ -402,7 +484,7 @@ export default function Lesson({ stageId, setId, revived, revivedFromIdx, revive
           <button
             className="clay-btn w-full py-4 text-base font-bold text-white"
             style={{ background: 'var(--or500)' }}
-            disabled={selected === null}
+            disabled={isBuilder ? !isEntryComplete(builderEntry) : selected === null}
             onClick={handleCheck}
           >
             答え合わせ
@@ -413,7 +495,7 @@ export default function Lesson({ stageId, setId, revived, revivedFromIdx, revive
             style={{ background: 'var(--or500)' }}
             onClick={handleNext}
           >
-            {current + 1 >= questions.length ? '結果を見る' : '次の問題へ'}
+            {sessionDone ? '結果を見る' : '次の問題へ'}
           </button>
         )}
       </div>
