@@ -251,6 +251,27 @@ export function unlockGlossaryCategory(stageId) {
   }
 }
 
+/** 【検証用】全ステージ・全セットをクリア済みにし、用語集も全解放する */
+export function unlockAllStages(stages, categoryNames) {
+  const data = load();
+  if (!data) return;
+  const uid = data.active_user;
+  const progress = data.users[uid].progress || {};
+  for (const stage of stages) {
+    progress[stage.id] = progress[stage.id] || {};
+    for (const set of stage.sets) {
+      const prev = progress[stage.id][set.id] || {};
+      progress[stage.id][set.id] = {
+        cleared: true,
+        best_acc: Math.max(prev.best_acc || 0, 100),
+      };
+    }
+  }
+  data.users[uid].progress = progress;
+  data.users[uid].unlocked_glossary_categories = [...categoryNames];
+  save(data);
+}
+
 /** ブラウザに永続ストレージを要求する（削除されにくくする） */
 export function requestPersistentStorage() {
   if (navigator.storage?.persist) {

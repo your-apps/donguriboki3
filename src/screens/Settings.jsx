@@ -1,5 +1,10 @@
 import { useState } from 'react';
-import { getUser, updateUser, exportBackup, importBackup } from '../services/storage';
+import { getUser, updateUser, exportBackup, importBackup, unlockAllStages } from '../services/storage';
+import { stages } from '../data/questions/index';
+import { glossaryCategories } from '../data/glossary';
+
+// 【検証用】全ステージ解放ボタンを表示するか
+const SHOW_UNLOCK_ALL = true;
 
 export default function Settings({ onBack }) {
   const user = getUser();
@@ -16,6 +21,11 @@ export default function Settings({ onBack }) {
     updateUser({ name: name.trim() || user.name, acorns_goal: goal, show_hint: showHint });
     setSaved(true);
     setTimeout(() => setSaved(false), 1500);
+  }
+
+  function handleUnlockAll() {
+    unlockAllStages(stages, glossaryCategories.map(c => c.name));
+    window.location.reload();
   }
 
   function handleExport() {
@@ -188,6 +198,23 @@ export default function Settings({ onBack }) {
             </button>
           </div>
         </div>
+
+        {/* 【検証用】全ステージ解放（本番リリース前に削除） */}
+        {SHOW_UNLOCK_ALL && (
+          <div className="clay-card p-5 space-y-2" style={{ border: '2px dashed var(--or300)' }}>
+            <h2 className="text-sm font-bold" style={{ color: 'var(--br600)' }}>検証用ツール</h2>
+            <p className="text-xs" style={{ color: 'var(--br400)' }}>
+              全ステージを解放し、すべての問題を解ける状態にします（動作確認用）。
+            </p>
+            <button
+              className="clay-btn w-full py-3 font-bold text-white text-sm"
+              style={{ background: 'var(--or300)' }}
+              onClick={handleUnlockAll}
+            >
+              全ステージを解放する
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
