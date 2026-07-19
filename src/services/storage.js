@@ -21,8 +21,9 @@ function defaultUser(name) {
     acorns_goal: 10,
     streak: 0,
     last_login: new Date().toISOString().slice(0, 10),
+    last_study: null, // 最後に学習（セッション完了）した日
+    hint_bonus_granted: true, // 初期5個は付与済み
     title: 'どんぐりころころ',
-    show_hint: true,
     progress: {},
     weak_questions: [],
     weak_consecutive_correct: {},
@@ -79,19 +80,37 @@ export function updateProgress(stageId, setId, cleared, bestAcc) {
   save(data);
 }
 
+/**
+ * どんぐりを加算する。
+ * 戻り値: { bonus, titleUp } — 日次目標達成ボーナス(+2)が出た場合と、称号が上がった場合の演出情報
+ */
 export function addAcorns(count) {
   const data = load();
-  if (!data) return 0;
+  if (!data) return { bonus: 0, titleUp: null };
   const uid = data.active_user;
-  data.users[uid].acorns_total += count;
-  data.users[uid].acorns_today += count;
+  const u = data.users[uid];
+  const today = new Date().toISOString().slice(0, 10);
 
-  // Update title
-  const total = data.users[uid].acorns_total;
-  data.users[uid].title = calcTitle(total);
+  const beforeToday = u.acorns_today;
+  const beforeTitle = u.title;
+  u.acorns_total += count;
+  u.acorns_today += count;
+
+  // 日次目標をこの加算で初めて越えたら、1日1回だけボーナス+2
+  let bonus = 0;
+  const goal = u.acorns_goal || 10;
+  if (beforeToday < goal && u.acorns_today >= goal && u.last_goal_bonus !== today) {
+    bonus = 2;
+    u.acorns_total += bonus;
+    u.acorns_today += bonus;
+    u.last_goal_bonus = today;
+  }
+
+  u.title = calcTitle(u.acorns_total);
+  const titleUp = u.title !== beforeTitle ? u.title : null;
 
   save(data);
-  return data.users[uid].acorns_total;
+  return { bonus, titleUp };
 }
 
 export function spendAcorns(count) {
@@ -104,24 +123,40 @@ export function spendAcorns(count) {
   return true;
 }
 
-export function updateStreak() {
+/** 日付が変わっていたら「今日のどんぐり」をリセットする（ホーム表示時に呼ぶ。ストリークには触れない） */
+export function dailyReset() {
   const data = load();
   if (!data) return;
-  const uid = data.active_user;
+  const u = data.users[data.active_user];
   const today = new Date().toISOString().slice(0, 10);
-  const last = data.users[uid].last_login;
+  if (u.last_login !== today) {
+    u.last_login = today;
+    u.acorns_today = 0;
+    save(data);
+  }
+}
 
-  if (last === today) return;
+// ストリークの節目（お祝い表示を出す日数）
+const STREAK_MILESTONES = [3, 7, 14, 30, 50, 100];
+
+/**
+ * 学習ストリークを更新する（セッション完了・ゲームオーバー時のみ呼ぶ。開くだけでは伸びない）。
+ * 戻り値: { streak, milestone } — milestone は節目に到達した瞬間だけ true
+ */
+export function updateStreak() {
+  const data = load();
+  if (!data) return { streak: 0, milestone: false };
+  const u = data.users[data.active_user];
+  const today = new Date().toISOString().slice(0, 10);
+  const last = u.last_study;
+
+  if (last === today) return { streak: u.streak, milestone: false };
 
   const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
-  if (last === yesterday) {
-    data.users[uid].streak += 1;
-  } else {
-    data.users[uid].streak = 1;
-  }
-  data.users[uid].last_login = today;
-  data.users[uid].acorns_today = 0;
+  u.streak = last === yesterday ? u.streak + 1 : 1;
+  u.last_study = today;
   save(data);
+  return { streak: u.streak, milestone: STREAK_MILESTONES.includes(u.streak) };
 }
 
 function calcTitle(total) {
@@ -284,6 +319,26 @@ export function unlockAllStages(stages, categoryNames) {
   data.users[uid].progress = progress;
   data.users[uid].unlocked_glossary_categories = [...categoryNames];
   save(data);
+}
+
+/** 既存データの移行処理（アプリ起動時に一度呼ぶ） */
+export function migrateData() {
+  const data = load();
+  if (!data) return;
+  const u = data.users[data.active_user];
+  let changed = false;
+  // ヒント導入前からのユーザーに初期ボーナス5個を付与（1回だけ）
+  if (!u.hint_bonus_granted) {
+    u.acorns_total += 5;
+    u.hint_bonus_granted = true;
+    changed = true;
+  }
+  // ストリークの基準を「学習した日」に分離（旧 last_login から引き継ぐ）
+  if (!u.last_study && u.last_login) {
+    u.last_study = u.last_login;
+    changed = true;
+  }
+  if (changed) save(data);
 }
 
 /** ブラウザに永続ストレージを要求する（削除されにくくする） */

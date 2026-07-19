@@ -3,7 +3,7 @@ import kuruImg from '../assets/kuru.webp';
 import tsumujiiImg from '../assets/tsumujii.webp';
 import AcornIcon from '../components/AcornIcon';
 import InstallPrompt from '../components/InstallPrompt';
-import { getUser, updateStreak } from '../services/storage';
+import { getUser, dailyReset } from '../services/storage';
 import { stages } from '../data/questions/index';
 
 const STAGE_META = [
@@ -96,7 +96,7 @@ export default function Home({ onStartLesson, onNavigate }) {
   const [openStageIdx, setOpenStageIdx] = useState(null);
 
   useEffect(() => {
-    updateStreak();
+    dailyReset();
     const u = getUser();
     setUser(u);
     if (u) {

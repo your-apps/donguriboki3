@@ -4,7 +4,6 @@
 export const stage5 = {
   id: 'stage5',
   title: '掛け取引に挑戦',
-  questionCount: 10,
   sets: [
     {
       id: 's5_1',

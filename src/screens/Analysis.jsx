@@ -34,8 +34,9 @@ export default function Analysis({ onStartLesson }) {
               stage.sets.map((set, setIdx) => {
                 const data = user.progress?.[stage.id]?.[set.id];
                 const acc = data?.best_acc ?? null;
+                const isExam = !!set.exam; // 模試は正答率でなく得点（70点合格）
                 const color = acc === null ? '#9CA3AF'
-                  : acc >= 80 ? 'var(--gr500)'
+                  : acc >= (isExam ? 70 : 80) ? 'var(--gr500)'
                   : acc >= 60 ? 'var(--or500)'
                   : '#E85A4A';
                 const barColor = acc === null ? '#D4C4A8'
@@ -49,7 +50,7 @@ export default function Analysis({ onStartLesson }) {
                         St.{stageIdx + 1}-{setIdx + 1} {set.title}
                       </span>
                       <span style={{ color }}>
-                        {acc === null ? '未挑戦' : `${acc}%`}
+                        {acc === null ? '未挑戦' : isExam ? `${acc}点` : `${acc}%`}
                       </span>
                     </div>
                     <div className="w-full h-2.5 rounded-full overflow-hidden" style={{ background: 'var(--track)' }}>

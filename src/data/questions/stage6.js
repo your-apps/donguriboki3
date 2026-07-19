@@ -4,7 +4,6 @@
 export const stage6 = {
   id: 'stage6',
   title: '帳簿を読もう',
-  questionCount: 12,
   sets: [
     {
       id: 's6_1',

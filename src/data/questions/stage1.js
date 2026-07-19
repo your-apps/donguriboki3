@@ -2,7 +2,6 @@
 export const stage1 = {
   id: 'stage1',
   title: 'お金の動きを感じよう',
-  questionCount: 8,
   sets: [
     {
       id: 's1_1',

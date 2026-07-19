@@ -3,7 +3,6 @@
 export const stage13 = {
   id: 'stage13',
   title: '本番模擬試験',
-  questionCount: 17,
   sets: [
     {
       id: 'mock1',

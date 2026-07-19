@@ -3,7 +3,6 @@
 export const stage16 = {
   id: 'stage16',
   title: '仕訳を書けるようになる',
-  questionCount: 10,
   sets: [
     {
       id: 's16_1',

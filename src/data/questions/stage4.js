@@ -4,7 +4,6 @@
 export const stage4 = {
   id: 'stage4',
   title: '現金取引を書こう',
-  questionCount: 10,
   sets: [
     {
       id: 's4_1',

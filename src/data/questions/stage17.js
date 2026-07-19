@@ -4,7 +4,6 @@
 export const stage17 = {
   id: 'stage17',
   title: '決算問題に挑む',
-  questionCount: 1,
   sets: [
     {
       id: 's17_1',

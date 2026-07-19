@@ -3,7 +3,6 @@
 export const stage18 = {
   id: 'stage18',
   title: '帳簿と勘定の総仕上げ',
-  questionCount: 1,
   sets: [
     {
       id: 's18_1',

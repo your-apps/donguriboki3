@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { isFirstLaunch, requestPersistentStorage, addAcorns } from './services/storage';
+import { isFirstLaunch, requestPersistentStorage, addAcorns, updateStreak, migrateData } from './services/storage';
 import { stageMap } from './data/questions/index';
 import StatementLesson from './screens/StatementLesson';
 import ExamLesson from './screens/ExamLesson';
@@ -16,6 +16,8 @@ function isExamSet(stageId, setId) {
 
 // 進捗データが消されにくいよう、起動時に一度だけ永続ストレージを要求する
 requestPersistentStorage();
+// 既存データの移行（初期ボーナス付与・ストリーク基準の分離）
+migrateData();
 import Onboarding from './screens/Onboarding';
 import Home from './screens/Home';
 import Lesson from './screens/Lesson';
@@ -46,6 +48,7 @@ export default function App() {
 
   function handleGameOver(data) {
     addAcorns(1); // 参加賞：ゲームオーバーでもどんぐり1個
+    updateStreak(); // 挑戦した日も学習日としてストリークに数える
     setGameOverState(data);
     setScreen('gameover');
   }

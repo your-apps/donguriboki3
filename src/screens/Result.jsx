@@ -5,6 +5,7 @@ import { addAcorns, updateProgress, updateStreak, calcAcorns, calcRepeatAcorns, 
 
 export default function Result({ stageId, setId, correct, total, onHome }) {
   const [acornsEarned, setAcornsEarned] = useState(0);
+  const [celebrations, setCelebrations] = useState([]);
   const savedRef = useRef(false);
 
   useEffect(() => {
@@ -16,10 +17,15 @@ export default function Result({ stageId, setId, correct, total, onHome }) {
       : calcAcorns(stageId, correct, total);
     const acc = Math.round((correct / total) * 100);
     // 必要正解数に到達した時点でこの画面に来るため、到達＝クリア
-    addAcorns(earned);
+    const reward = addAcorns(earned);
     updateProgress(stageId, setId, true, acc);
-    updateStreak();
+    const streakInfo = updateStreak();
     setAcornsEarned(earned);
+    setCelebrations([
+      ...(reward.bonus ? [`🎉 今日の目標達成！ボーナス +${reward.bonus}個`] : []),
+      ...(reward.titleUp ? [`👑 称号が「${reward.titleUp}」に上がった！`] : []),
+      ...(streakInfo.milestone ? [`🔥 連続学習 ${streakInfo.streak}日達成！すごいのじゃ！`] : []),
+    ]);
   }, [stageId, setId, correct, total]);
 
   const acc = Math.round((correct / total) * 100);
@@ -66,6 +72,21 @@ export default function Result({ stageId, setId, correct, total, onHome }) {
             +{acornsEarned}個 獲得！
           </span>
         </div>
+
+        {/* 達成演出（目標ボーナス・称号昇格・ストリーク節目） */}
+        {celebrations.length > 0 && (
+          <div className="space-y-1.5">
+            {celebrations.map((c, i) => (
+              <div
+                key={i}
+                className="py-2 px-3 rounded-xl text-sm font-bold animate-bounce-in"
+                style={{ background: '#F0FBF0', color: 'var(--gr500)', border: '1.5px solid var(--gr300)' }}
+              >
+                {c}
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* ツム爺コメント＋分析（統合） */}

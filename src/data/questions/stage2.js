@@ -5,7 +5,6 @@
 export const stage2 = {
   id: 'stage2',
   title: '左と右を覚えよう',
-  questionCount: 8,
   sets: [
     {
       id: 's2_1',

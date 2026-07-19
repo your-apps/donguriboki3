@@ -5,7 +5,7 @@ import CharaBubble from '../components/CharaBubble';
 import JournalBuilder from '../components/JournalBuilder';
 import { emptyEntry, isEntryComplete, gradeJournalEntry } from '../services/journal';
 import { stageMap, findQuestion } from '../data/questions/index';
-import { recordWrong, recordCorrect, getDueReviewIds, unlockGlossaryCategory, spendAcorns } from '../services/storage';
+import { recordWrong, recordCorrect, getDueReviewIds, unlockGlossaryCategory, spendAcorns, getUser } from '../services/storage';
 
 // クルの励ましコメント（ランダム選択）
 // タイミング別のクルのコメント（1問目／途中／最終問題）
@@ -96,11 +96,13 @@ export default function Lesson({ stageId, setId, revived, revivedFromIdx, revive
   const gameOverFiredRef = useRef(false);
   const [hintShown, setHintShown] = useState(false); // この問題でヒント代を支払ったか
   const [hintMessage, setHintMessage] = useState(null);
+  const [acornBalance, setAcornBalance] = useState(() => getUser()?.acorns_total ?? 0);
 
   function handleShowHint() {
     if (spendAcorns(1)) {
       setHintShown(true);
       setHintMessage(null);
+      setAcornBalance(b => b - 1);
     } else {
       setHintMessage('どんぐりが足りないのじゃ。問題を解いて集めるのじゃよ。');
     }
@@ -358,6 +360,13 @@ export default function Lesson({ stageId, setId, revived, revivedFromIdx, revive
                 {timeLeft}秒
               </span>
             )}
+            <span
+              className="text-xs font-bold px-2 py-1 rounded-full"
+              style={{ background: 'var(--or50)', color: 'var(--or500)', border: '1px solid var(--or200)' }}
+              aria-label={`所持どんぐり ${acornBalance}個`}
+            >
+              🌰{acornBalance}
+            </span>
             <div className="flex gap-1" aria-label={`残りハート ${hearts}個`}>
               {[0, 1, 2].map(i => <HeartIcon key={i} empty={i >= hearts} size={22} />)}
             </div>
