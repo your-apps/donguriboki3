@@ -6,7 +6,7 @@ import Calculator from '../components/Calculator';
 import { stageMap } from '../data/questions/index';
 import { emptyEntry, gradeJournalEntry } from '../services/journal';
 import { blankKeysOf, answerOf, isKeyCorrect, scoreStatement, isWordBlank, isAmountBlank } from '../services/statement';
-import { addAcorns, updateProgress, updateStreak } from '../services/storage';
+import { addAcorns, updateProgress, updateStreak, isSetCleared } from '../services/storage';
 
 const fmt = n => Number(n).toLocaleString('ja-JP');
 const EXAM_SECONDS = 60 * 60;
@@ -92,8 +92,8 @@ function StatementSection({ st, answers, onAnswers, graded }) {
           type="text" inputMode="numeric" placeholder="？"
           value={answers[key] ?? ''}
           onChange={e => onAnswers({ ...answers, [key]: e.target.value.replace(/[^0-9]/g, '').slice(0, 10) })}
-          className="w-full rounded-lg px-1.5 py-1 text-right text-xs outline-none tabular-nums"
-          style={{ background: 'var(--or50)', border: '1.5px solid var(--or300)', color: 'var(--br600)' }}
+          className="w-full rounded-lg px-1.5 py-1 text-right outline-none tabular-nums"
+          style={{ fontSize: 16, background: 'var(--or50)', border: '1.5px solid var(--or300)', color: 'var(--br600)' }}
         />
       </td>
     );
@@ -284,7 +284,10 @@ export default function ExamLesson({ stageId, setId, onHome }) {
     const s3 = Math.round(35 * r3.correct / r3.total);
     const total = s1 + s2 + s3;
     const passed = total >= 70;
-    const acorns = passed ? 50 : 5;
+    // 再挑戦時は少額（合格10／不合格1）
+    const acorns = isSetCleared(stageId, setId)
+      ? (passed ? 10 : 1)
+      : (passed ? 50 : 5);
     setScores({ s1, s2, s3, total, passed, acorns, q1Correct });
     addAcorns(acorns);
     updateProgress(stageId, setId, passed, total);

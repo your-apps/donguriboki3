@@ -10,7 +10,6 @@ export default function Settings({ onBack }) {
   const user = getUser();
   const [name, setName] = useState(user?.name || '');
   const [goal, setGoal] = useState(user?.acorns_goal || 10);
-  const [showHint, setShowHint] = useState(user?.show_hint ?? true);
   const [saved, setSaved] = useState(false);
   const [backupCode, setBackupCode] = useState('');
   const [copied, setCopied] = useState(false);
@@ -18,7 +17,7 @@ export default function Settings({ onBack }) {
   const [restoreMessage, setRestoreMessage] = useState(null);
 
   function handleSave() {
-    updateUser({ name: name.trim() || user.name, acorns_goal: goal, show_hint: showHint });
+    updateUser({ name: name.trim() || user.name, acorns_goal: goal });
     setSaved(true);
     setTimeout(() => setSaved(false), 1500);
   }
@@ -105,28 +104,6 @@ export default function Settings({ onBack }) {
             </div>
           </div>
 
-          {/* ヒント */}
-          <div className="flex items-center justify-between">
-            <label htmlFor="setting-hint" className="text-sm font-bold" style={{ color: 'var(--br400)' }}>
-              ヒントを表示する
-            </label>
-            <button
-              id="setting-hint"
-              role="switch"
-              aria-checked={showHint}
-              className="w-12 h-6 rounded-full transition-colors duration-200 cursor-pointer relative"
-              style={{
-                background: showHint ? 'var(--or300)' : '#D4C4A8',
-                border: 'none',
-              }}
-              onClick={() => setShowHint(v => !v)}
-            >
-              <span
-                className="absolute top-0.5 left-0 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200"
-                style={{ transform: showHint ? 'translateX(26px)' : 'translateX(2px)' }}
-              />
-            </button>
-          </div>
         </div>
 
         <button
@@ -158,8 +135,8 @@ export default function Settings({ onBack }) {
                 readOnly
                 value={backupCode}
                 rows={3}
-                className="w-full rounded-xl px-3 py-2 text-xs outline-none border-2 break-all"
-                style={{ borderColor: 'var(--or200)', background: 'var(--or50)', color: 'var(--br600)', resize: 'none' }}
+                className="w-full rounded-xl px-3 py-2 outline-none border-2 break-all"
+                style={{ fontSize: 16, borderColor: 'var(--or200)', background: 'var(--or50)', color: 'var(--br600)', resize: 'none' }}
                 onFocus={e => e.target.select()}
               />
               <button
@@ -182,8 +159,8 @@ export default function Settings({ onBack }) {
               onChange={e => { setRestoreCode(e.target.value); setRestoreMessage(null); }}
               rows={3}
               placeholder="バックアップコードを貼り付け"
-              className="w-full rounded-xl px-3 py-2 text-xs outline-none border-2 break-all"
-              style={{ borderColor: 'var(--or200)', background: 'var(--or50)', color: 'var(--br600)', resize: 'none' }}
+              className="w-full rounded-xl px-3 py-2 outline-none border-2 break-all"
+              style={{ fontSize: 16, borderColor: 'var(--or200)', background: 'var(--or50)', color: 'var(--br600)', resize: 'none' }}
             />
             {restoreMessage && (
               <p className="text-xs font-bold" style={{ color: '#E85A4A' }}>{restoreMessage}</p>

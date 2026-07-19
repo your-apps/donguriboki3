@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import tsumujiiImg from '../assets/tsumujii.webp';
 import AcornIcon from '../components/AcornIcon';
-import { addAcorns, updateProgress, updateStreak, calcAcorns } from '../services/storage';
+import { addAcorns, updateProgress, updateStreak, calcAcorns, calcRepeatAcorns, isSetCleared } from '../services/storage';
 
 export default function Result({ stageId, setId, correct, total, onHome }) {
   const [acornsEarned, setAcornsEarned] = useState(0);
@@ -10,7 +10,10 @@ export default function Result({ stageId, setId, correct, total, onHome }) {
   useEffect(() => {
     if (savedRef.current) return;
     savedRef.current = true;
-    const earned = calcAcorns(stageId, correct, total);
+    // 初回クリアは満額、再クリアは少額（周回で稼げないように）
+    const earned = isSetCleared(stageId, setId)
+      ? calcRepeatAcorns(correct, total)
+      : calcAcorns(stageId, correct, total);
     const acc = Math.round((correct / total) * 100);
     // 必要正解数に到達した時点でこの画面に来るため、到達＝クリア
     addAcorns(earned);

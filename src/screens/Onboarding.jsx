@@ -36,6 +36,10 @@ export default function Onboarding({ onComplete }) {
           <p style={{ color: 'var(--br400)' }}>
             さっそく始めよう！
           </p>
+          <p className="text-sm mt-2 font-bold" style={{ color: 'var(--or500)' }}>
+            🌰 ツム爺からどんぐりを5個もらった！<br />
+            <span className="text-xs font-normal" style={{ color: 'var(--br400)' }}>困ったときのヒントに使えるよ</span>
+          </p>
         </div>
         <button
           className="clay-btn w-full py-4 text-lg font-bold text-white"

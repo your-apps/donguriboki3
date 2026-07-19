@@ -5,7 +5,7 @@ import CharaBubble from '../components/CharaBubble';
 import JournalBuilder from '../components/JournalBuilder';
 import { emptyEntry, isEntryComplete, gradeJournalEntry } from '../services/journal';
 import { stageMap, findQuestion } from '../data/questions/index';
-import { recordWrong, recordCorrect, getDueReviewIds, unlockGlossaryCategory, getUser } from '../services/storage';
+import { recordWrong, recordCorrect, getDueReviewIds, unlockGlossaryCategory, spendAcorns } from '../services/storage';
 
 // クルの励ましコメント（ランダム選択）
 // タイミング別のクルのコメント（1問目／途中／最終問題）
@@ -94,7 +94,17 @@ export default function Lesson({ stageId, setId, revived, revivedFromIdx, revive
   );
   const timerRef = useRef(null);
   const gameOverFiredRef = useRef(false);
-  const showHintSetting = getUser()?.show_hint ?? true;
+  const [hintShown, setHintShown] = useState(false); // この問題でヒント代を支払ったか
+  const [hintMessage, setHintMessage] = useState(null);
+
+  function handleShowHint() {
+    if (spendAcorns(1)) {
+      setHintShown(true);
+      setHintMessage(null);
+    } else {
+      setHintMessage('どんぐりが足りないのじゃ。問題を解いて集めるのじゃよ。');
+    }
+  }
 
   // 苦手専用セッション or 通常セッション
   useEffect(() => {
@@ -257,6 +267,8 @@ export default function Lesson({ stageId, setId, revived, revivedFromIdx, revive
     setAnswered(false);
     setBuilderEntry(emptyEntry());
     setWasCorrect(false);
+    setHintShown(false);
+    setHintMessage(null);
   }, [current, questions, results, required, stageId, setId, onFinish]);
 
   if (!q || questions.length === 0) return (
@@ -436,16 +448,27 @@ export default function Lesson({ stageId, setId, revived, revivedFromIdx, revive
         </div>
         )}
 
-        {/* ヒント（設定でONの場合のみ） */}
-        {!answered && q.hint && showHintSetting && (
-          <details className="text-sm">
-            <summary className="cursor-pointer font-medium px-1" style={{ color: 'var(--br400)' }}>
-              ヒントを見る
-            </summary>
-            <div className="mt-2 p-3 rounded-xl text-sm" style={{ background: 'var(--br50)', color: 'var(--br600)' }}>
+        {/* ヒント（どんぐり1個で表示） */}
+        {!answered && q.hint && (
+          hintShown ? (
+            <div className="p-3 rounded-xl text-sm animate-fade-up" style={{ background: 'var(--br50)', color: 'var(--br600)' }}>
+              <span className="font-bold mr-1" style={{ color: 'var(--br400)' }}>ヒント：</span>
               {q.hint}
             </div>
-          </details>
+          ) : (
+            <div>
+              <button
+                className="text-sm font-medium px-3 py-2 rounded-xl"
+                style={{ background: 'var(--or50)', color: 'var(--br400)', border: '1.5px solid var(--or200)' }}
+                onClick={handleShowHint}
+              >
+                🌰 どんぐり1個でヒントを見る
+              </button>
+              {hintMessage && (
+                <p className="text-xs mt-1 px-1 font-bold" style={{ color: '#E85A4A' }}>{hintMessage}</p>
+              )}
+            </div>
+          )
         )}
 
         {/* 解説（不正解時のみ） */}

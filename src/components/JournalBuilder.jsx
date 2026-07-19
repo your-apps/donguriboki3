@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ACCOUNT_CATEGORIES } from '../data/accounts';
+import { ACCOUNT_CATEGORIES, searchAccounts } from '../data/accounts';
 
 const fmt = n => (n === '' || n == null) ? '' : Number(n).toLocaleString('ja-JP');
 
@@ -7,7 +7,10 @@ const fmt = n => (n === '' || n == null) ? '' : Number(n).toLocaleString('ja-JP'
 
 function AccountPicker({ onSelect, onClose }) {
   const [catId, setCatId] = useState(ACCOUNT_CATEGORIES[0].id);
+  const [query, setQuery] = useState('');
   const cat = ACCOUNT_CATEGORIES.find(c => c.id === catId);
+  const searching = query.trim().length > 0;
+  const shownAccounts = searching ? searchAccounts(query) : cat.accounts;
 
   return (
     <div
@@ -34,28 +37,40 @@ function AccountPicker({ onSelect, onClose }) {
           </button>
         </div>
 
-        {/* カテゴリタブ */}
-        <div className="flex gap-1.5 mb-3 overflow-x-auto pb-1">
-          {ACCOUNT_CATEGORIES.map(c => (
-            <button
-              key={c.id}
-              className="px-3 py-1.5 rounded-full text-xs font-bold flex-shrink-0"
-              style={{
-                background: c.id === catId ? 'var(--or500)' : 'var(--or50)',
-                color: c.id === catId ? 'white' : 'var(--br400)',
-                border: c.id === catId ? 'none' : '1.5px solid var(--or200)',
-              }}
-              onClick={() => setCatId(c.id)}
-            >
-              {c.name}
-            </button>
-          ))}
-        </div>
+        {/* 検索ボックス（漢字・よみがなの部分一致） */}
+        <input
+          type="text"
+          value={query}
+          onChange={e => setQuery(e.target.value)}
+          placeholder="科目名・よみがなで検索"
+          className="w-full rounded-xl px-3 py-2 mb-3 outline-none border-2"
+          style={{ fontSize: 16, borderColor: 'var(--or200)', background: 'var(--or50)', color: 'var(--br600)' }}
+        />
+
+        {/* カテゴリタブ（検索中は非表示） */}
+        {!searching && (
+          <div className="flex gap-1.5 mb-3 overflow-x-auto pb-1">
+            {ACCOUNT_CATEGORIES.map(c => (
+              <button
+                key={c.id}
+                className="px-3 py-1.5 rounded-full text-xs font-bold flex-shrink-0"
+                style={{
+                  background: c.id === catId ? 'var(--or500)' : 'var(--or50)',
+                  color: c.id === catId ? 'white' : 'var(--br400)',
+                  border: c.id === catId ? 'none' : '1.5px solid var(--or200)',
+                }}
+                onClick={() => setCatId(c.id)}
+              >
+                {c.name}
+              </button>
+            ))}
+          </div>
+        )}
 
         {/* 科目一覧 */}
         <div className="overflow-y-auto flex-1">
           <div className="flex flex-wrap gap-1.5">
-            {cat.accounts.map(a => (
+            {shownAccounts.map(a => (
               <button
                 key={a}
                 className="px-3 py-2 rounded-xl text-xs font-medium"
@@ -65,6 +80,9 @@ function AccountPicker({ onSelect, onClose }) {
                 {a}
               </button>
             ))}
+            {searching && shownAccounts.length === 0 && (
+              <p className="text-xs" style={{ color: 'var(--br400)' }}>見つからなかったのじゃ。別のことばで探すのじゃ。</p>
+            )}
           </div>
         </div>
       </div>
@@ -115,8 +133,8 @@ function SideEditor({ label, rows, onChangeRows, disabled }) {
                 updateRow(idx, { amount: digits });
               }}
               disabled={disabled}
-              className="w-24 flex-shrink-0 py-2.5 px-2 rounded-xl text-xs font-bold text-right outline-none"
-              style={{ background: 'white', color: 'var(--br600)', border: '1.5px solid var(--or200)' }}
+              className="w-28 flex-shrink-0 py-2 px-2 rounded-xl font-bold text-right outline-none"
+              style={{ fontSize: 16, background: 'white', color: 'var(--br600)', border: '1.5px solid var(--or200)' }}
               aria-label={`${label}の金額`}
             />
             {rows.length > 1 && !disabled && (

@@ -3,7 +3,7 @@ import tsumujiiImg from '../assets/tsumujii.webp';
 import AcornIcon from '../components/AcornIcon';
 import Calculator from '../components/Calculator';
 import { stageMap } from '../data/questions/index';
-import { addAcorns, updateProgress, updateStreak } from '../services/storage';
+import { addAcorns, updateProgress, updateStreak, isSetCleared } from '../services/storage';
 
 const fmt = n => Number(n).toLocaleString('ja-JP');
 
@@ -112,7 +112,10 @@ export default function StatementLesson({ stageId, setId, onHome }) {
   function handleGrade() {
     const correct = blankKeys.filter(isCellCorrect).length;
     const pct = Math.round((correct / blankKeys.length) * 100);
-    const acorns = calcStatementAcorns(pct, !!st.small);
+    // 再クリア時は少額（70点以上3／未満1）
+    const acorns = isSetCleared(stageId, setId)
+      ? (pct >= 70 ? 3 : 1)
+      : calcStatementAcorns(pct, !!st.small);
     setScore(pct);
     setEarned(acorns);
     setGraded(true);
@@ -172,8 +175,8 @@ export default function StatementLesson({ stageId, setId, onHome }) {
             const digits = e.target.value.replace(/[^0-9]/g, '').slice(0, 10);
             setAnswers(prev => ({ ...prev, [key]: digits }));
           }}
-          className="w-full rounded-lg px-1.5 py-1 text-right text-xs outline-none tabular-nums"
-          style={{ background: 'var(--or50)', border: '1.5px solid var(--or300)', color: 'var(--br600)' }}
+          className="w-full rounded-lg px-1.5 py-1 text-right outline-none tabular-nums"
+          style={{ fontSize: 16, background: 'var(--or50)', border: '1.5px solid var(--or300)', color: 'var(--br600)' }}
           aria-label={`${typeof row.label === 'string' ? row.label : 'ことば空欄'}の金額`}
         />
       </td>

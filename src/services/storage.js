@@ -16,7 +16,7 @@ function save(data) {
 function defaultUser(name) {
   return {
     name,
-    acorns_total: 0,
+    acorns_total: 5, // 初期ボーナス（ヒント用にツム爺から5個）
     acorns_today: 0,
     acorns_goal: 10,
     streak: 0,
@@ -249,6 +249,20 @@ export function unlockGlossaryCategory(stageId) {
     data.users[uid].unlocked_glossary_categories = [...cats, category];
     save(data);
   }
+}
+
+/** そのセットをすでにクリア済みか（再クリア報酬の判定用） */
+export function isSetCleared(stageId, setId) {
+  const user = getUser();
+  return !!user?.progress?.[stageId]?.[setId]?.cleared;
+}
+
+/** 再クリア時の通常セット報酬（ノーミス3／1ミス2／それ以外1） */
+export function calcRepeatAcorns(correctCount, totalCount) {
+  const misses = totalCount - correctCount;
+  if (misses <= 0) return 3;
+  if (misses === 1) return 2;
+  return 1;
 }
 
 /** 【検証用】全ステージ・全セットをクリア済みにし、用語集も全解放する */
