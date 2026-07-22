@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import HeartIcon from '../components/HeartIcon';
 import ProgressBar from '../components/ProgressBar';
 import CharaBubble from '../components/CharaBubble';
+import AcornIcon from '../components/AcornIcon';
 import JournalBuilder from '../components/JournalBuilder';
 import { emptyEntry, isEntryComplete, gradeJournalEntry } from '../services/journal';
 import { stageMap, findQuestion } from '../data/questions/index';
@@ -145,13 +146,20 @@ export default function Lesson({ stageId, setId, revived, revivedFromIdx, revive
     const reviewIds = getDueReviewIds(setQIds);
     const reviewQs = reviewIds.map(id => findQuestion(id)?.question).filter(Boolean);
 
-    // 重複排除してランダム出題（復習問題も含めてシャッフル）
+    // 重複排除してランダム出題（basic: true のルール問題は必ず冒頭に出す）
     const reviewIdSet = new Set(reviewIds);
     const normalQs = set.questions.filter(q => !reviewIdSet.has(q.id));
-    setQuestions(shuffleArray([...reviewQs, ...normalQs]).map(prepareQuestion));
+    const basicQs = normalQs.filter(q => q.basic);
+    const restQs = normalQs.filter(q => !q.basic);
+    setQuestions([
+      ...shuffleArray(basicQs),
+      ...shuffleArray([...reviewQs, ...restQs]),
+    ].map(prepareQuestion));
 
     // 時間制限
     if (set.timeLimit) setTimeLeft(set.timeLimit);
+  // revived系propsとrequiredはマウント時にのみ確定するため依存に含めない
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [stageId, setId]);
 
   const q = questions[current];
@@ -185,10 +193,7 @@ export default function Lesson({ stageId, setId, revived, revivedFromIdx, revive
     recordWrong(q.id);
     const newResults = [...results, { id: q.id, correct: false, selected: -1 }];
     setResults(newResults);
-    if (newHearts <= 0 && !gameOverFiredRef.current) {
-      gameOverFiredRef.current = true;
-      setTimeout(() => onGameOver({ stageId, setId, questions, results: newResults, hearts: 0, revived, currentIdx: current }), 3000);
-    }
+    // ハート0でも自動遷移せず、「結果へ」ボタンで進んでもらう
   }
 
   const handleSelect = useCallback((idx) => {
@@ -216,16 +221,21 @@ export default function Lesson({ stageId, setId, revived, revivedFromIdx, revive
       setHearts(newHearts);
       setShakeKey(k => k + 1);
 
-      if (newHearts <= 0 && !gameOverFiredRef.current) {
-        gameOverFiredRef.current = true;
-        const newRes = [...results, { id: q.id, correct: false, selected }];
-        setTimeout(() => onGameOver({ stageId, setId, questions, results: newRes, hearts: 0, revived, currentIdx: current }), 3000);
-        setResults(newRes);
+      if (newHearts <= 0) {
+        // 自動遷移はせず、解説を読んでから「結果へ」ボタンで進んでもらう
+        setResults([...results, { id: q.id, correct: false, selected }]);
         return;
       }
     }
     setResults(prev => [...prev, { id: q.id, correct, selected }]);
   }, [selected, answered, q, hearts, stageId, setId, questions, results, revived, current, onGameOver, builderEntry]);
+
+  // ハート0で解説を読み終えたあと、ゲームオーバー画面へ進む
+  function handleGoGameOver() {
+    if (gameOverFiredRef.current) return;
+    gameOverFiredRef.current = true;
+    onGameOver({ stageId, setId, questions, results, hearts: 0, revived, currentIdx: current });
+  }
 
   const handleNext = useCallback(() => {
     const correctCount = results.filter(r => r.correct).length;
@@ -361,11 +371,12 @@ export default function Lesson({ stageId, setId, revived, revivedFromIdx, revive
               </span>
             )}
             <span
-              className="text-xs font-bold px-2 py-1 rounded-full"
+              key={`acorn-${acornBalance}`}
+              className="text-xs font-bold px-2 py-1 rounded-full inline-flex items-center gap-0.5 animate-bounce-in"
               style={{ background: 'var(--or50)', color: 'var(--or500)', border: '1px solid var(--or200)' }}
               aria-label={`所持どんぐり ${acornBalance}個`}
             >
-              🌰{acornBalance}
+              <AcornIcon size={13} />{acornBalance}
             </span>
             <div className="flex gap-1" aria-label={`残りハート ${hearts}個`}>
               {[0, 1, 2].map(i => <HeartIcon key={i} empty={i >= hearts} size={22} />)}
@@ -467,11 +478,11 @@ export default function Lesson({ stageId, setId, revived, revivedFromIdx, revive
           ) : (
             <div>
               <button
-                className="text-sm font-medium px-3 py-2 rounded-xl"
+                className="text-sm font-medium px-3 py-2 rounded-xl inline-flex items-center gap-1.5"
                 style={{ background: 'var(--or50)', color: 'var(--br400)', border: '1.5px solid var(--or200)' }}
                 onClick={handleShowHint}
               >
-                🌰 どんぐり1個でヒントを見る
+                <AcornIcon size={16} /> どんぐり1個でヒントを見る
               </button>
               {hintMessage && (
                 <p className="text-xs mt-1 px-1 font-bold" style={{ color: '#E85A4A' }}>{hintMessage}</p>
@@ -521,13 +532,21 @@ export default function Lesson({ stageId, setId, revived, revivedFromIdx, revive
           >
             答え合わせ
           </button>
-        ) : hearts > 0 && (
+        ) : hearts > 0 ? (
           <button
             className="clay-btn w-full py-4 text-base font-bold text-white"
             style={{ background: 'var(--or500)' }}
             onClick={handleNext}
           >
             {sessionDone ? '結果を見る' : '次の問題へ'}
+          </button>
+        ) : (
+          <button
+            className="clay-btn w-full py-4 text-base font-bold text-white"
+            style={{ background: '#E85A4A' }}
+            onClick={handleGoGameOver}
+          >
+            結果へ
           </button>
         )}
       </div>

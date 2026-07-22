@@ -57,7 +57,7 @@ export default function Glossary() {
           <div className="bubble bubble-tail-left text-sm flex-1" style={{ color: 'var(--br600)', marginBottom: 14 }}>
             {unlockedNames.size > 0
               ? '分からない言葉があれば、ここで調べるのじゃ。'
-              : 'ステージをクリアすると、用語が少しずつ増えていくのじゃよ。'}
+              : 'ステージを進めると、用語が少しずつ増えていくのじゃよ。'}
           </div>
         </div>
 
@@ -167,7 +167,7 @@ export default function Glossary() {
                           {cat.name}
                         </div>
                         <div className="text-xs" style={{ color: unlocked ? 'var(--br400)' : '#C4B898' }}>
-                          {unlocked ? `${cat.terms.length}語` : 'ステージをクリアして解放'}
+                          {unlocked ? `${cat.terms.length}語` : 'ステージに到達すると解放'}
                         </div>
                       </div>
                     </div>
@@ -212,7 +212,7 @@ export default function Glossary() {
         {unlockedNames.size === 0 && !query && (
           <div className="clay-card p-5 text-center">
             <p className="text-sm leading-relaxed" style={{ color: 'var(--br400)' }}>
-              ステージ1をクリアすると<br/>最初の用語が解放されるのじゃよ！
+              ステージを進めると<br/>用語が解放されていくのじゃよ！
             </p>
           </div>
         )}

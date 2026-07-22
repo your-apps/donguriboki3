@@ -1,5 +1,6 @@
 // 用語集データ（簿記3級・約80語）
 // category の stageId が対応するステージで解放される
+import { stages } from './questions/index.js';
 
 export const glossaryCategories = [
   {
@@ -797,14 +798,23 @@ export const stageToCategoryName = {
   stage12: '試算表・決算',
 };
 
-/** ユーザーの進捗から解放済みカテゴリ名一覧を計算する */
+/**
+ * ユーザーの進捗から解放済みカテゴリ名一覧を計算する。
+ * ステージに「到達」した時点（＝前ステージの最終セットをクリア）で、
+ * そのステージの用語カテゴリを解放する。挑戦中に基礎用語を調べられるようにするため。
+ */
 export function calcUnlockedCategories(userProgress) {
   const unlocked = new Set();
-  for (const [stageId, sets] of Object.entries(userProgress || {})) {
-    if (Object.values(sets).some(s => s.cleared)) {
-      const cat = stageToCategoryName[stageId];
-      if (cat) unlocked.add(cat);
+  stages.forEach((stage, idx) => {
+    const cat = stageToCategoryName[stage.id];
+    if (!cat) return;
+    let reached = idx === 0; // 最初のステージは最初から解放
+    if (!reached) {
+      const prev = stages[idx - 1];
+      const lastSet = prev.sets[prev.sets.length - 1];
+      reached = !!userProgress?.[prev.id]?.[lastSet.id]?.cleared;
     }
-  }
+    if (reached) unlocked.add(cat);
+  });
   return [...unlocked];
 }

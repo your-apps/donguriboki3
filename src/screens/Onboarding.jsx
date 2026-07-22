@@ -2,6 +2,7 @@ import { useState } from 'react';
 import kuruImg from '../assets/kuru.webp';
 import tsumujiiImg from '../assets/tsumujii.webp';
 import { initUser } from '../services/storage';
+import AcornIcon from '../components/AcornIcon';
 
 export default function Onboarding({ onComplete }) {
   const [step, setStep] = useState(1);
@@ -37,7 +38,9 @@ export default function Onboarding({ onComplete }) {
             さっそく始めよう！
           </p>
           <p className="text-sm mt-2 font-bold" style={{ color: 'var(--or500)' }}>
-            🌰 ツム爺からどんぐりを5個もらった！<br />
+            <span className="inline-flex items-center gap-1">
+              <AcornIcon size={16} /> ツム爺からどんぐりを5個もらった！
+            </span><br />
             <span className="text-xs font-normal" style={{ color: 'var(--br400)' }}>困ったときのヒントに使えるよ</span>
           </p>
         </div>

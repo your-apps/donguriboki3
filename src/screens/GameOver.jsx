@@ -1,4 +1,5 @@
 import tsumujiiImg from '../assets/tsumujii.webp';
+import AcornIcon from '../components/AcornIcon';
 import { getUser, spendAcorns } from '../services/storage';
 
 export default function GameOver({ sessionData, onRevive, onHome }) {
@@ -30,6 +31,16 @@ export default function GameOver({ sessionData, onRevive, onHome }) {
         <p className="text-sm mt-2 font-bold" style={{ color: 'var(--or500)' }}>
           がんばった分じゃ。どんぐりを1個あげよう。
         </p>
+        {/* 参加賞と現在の所持数を明示（ヒント消費分も反映済みの最新値） */}
+        <div
+          className="flex items-center justify-center gap-2 py-2 mt-3 rounded-2xl"
+          style={{ background: 'var(--or50)' }}
+        >
+          <AcornIcon size={20} />
+          <span className="font-bold text-sm" style={{ color: 'var(--or500)' }}>
+            参加賞 +1個 ／ 所持 {user?.acorns_total ?? 0}個
+          </span>
+        </div>
       </div>
 
       {canRevive && (
